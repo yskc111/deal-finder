@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0D0D1A">
+<title>중고나라 급매 알리미</title>
+<link rel="manifest" href="/manifest.json">
+<style>
+:root{
+  --bg:#0D0D1A;--s1:#16162A;--s2:#1E1E35;--s3:#252540;
+  --bd:rgba(255,255,255,.07);--t1:#F0F0FF;--t2:#8888AA;--t3:#44446A;
+  --red:#FF5F5F;--org:#FF8C42;--grn:#22D67A;--blu:#5B8DEF;--gld:#F5A623;--pur:#A855F7;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--t1);height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto;overflow:hidden}
+
+/* ── 헤더 ── */
+#hdr{background:var(--s1);border-bottom:1px solid var(--bd);padding:12px 14px 0;flex-shrink:0}
+.h1{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.h-title{flex:1;font-size:17px;font-weight:900;background:linear-gradient(90deg,#FF5F5F,#FF8C42);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--t3);transition:all .3s;flex-shrink:0}
+.dot.on{background:var(--grn);box-shadow:0 0 8px var(--grn);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.s-lbl{font-size:11px;color:var(--t2)}
+.iBtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);color:var(--t2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.iBtn:active{transform:scale(.88)}
+
+/* 통계 */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:10px}
+.stc{background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:7px 4px;text-align:center}
+.stv{font-size:14px;font-weight:800}
+.stl{font-size:9px;color:var(--t3);margin-top:1px}
+
+/* 탭 */
+.tabs{display:flex;gap:0}
+.tab{flex:1;padding:8px 4px;border:none;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;background:none;color:var(--t3);border-bottom:2px solid transparent;transition:all .2s}
+.tab.on{color:var(--red);border-bottom-color:var(--red)}
+
+/* ── 스크롤 ── */
+#body{flex:1;overflow-y:auto;padding:12px 13px 86px;-webkit-overflow-scrolling:touch}
+#body::-webkit-scrollbar{width:3px}
+#body::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+
+/* 빈 화면 */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:70px 20px;gap:10px}
+.empty-ico{font-size:48px}
+.empty-t{font-size:15px;font-weight:700;color:var(--t2)}
+.empty-s{font-size:12px;color:var(--t3);text-align:center;line-height:1.7}
+
+/* ── 급매 카드 ── */
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:13px;margin-bottom:9px;position:relative;overflow:hidden;cursor:pointer;transition:transform .12s}
+.card:active{transform:scale(.975)}
+.card.hot{border-color:rgba(255,95,95,.3)}
+.card.checking{border-color:rgba(245,166,35,.3)}
+.card.sold{border-color:rgba(34,214,122,.35);opacity:.65}
+.card.miss{border-color:var(--bd);opacity:.5}
+.top-bar{position:absolute;top:0;left:0;right:0;height:2px}
+
+.c-head{display:flex;align-items:flex-start;gap:7px;margin-bottom:7px}
+.c-kw{font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(91,141,239,.13);color:var(--blu);margin-bottom:3px;display:inline-block}
+.c-title{font-size:13px;font-weight:700;color:var(--t1);line-height:1.4}
+.xBtn{width:22px;height:22px;border-radius:6px;border:none;background:var(--s3);color:var(--t3);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+.c-price-row{display:flex;align-items:baseline;gap:7px;margin-bottom:7px}
+.c-price{font-size:20px;font-weight:900;color:var(--red)}
+.c-market{font-size:11px;color:var(--t3)}
+.c-score{margin-left:auto;font-size:11px;font-weight:800;padding:3px 8px;border-radius:20px}
+
+.badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px}
+.bdg{font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px}
+.b-hot{background:rgba(255,95,95,.12);color:var(--red)}
+.b-disc{background:rgba(34,214,122,.1);color:var(--grn)}
+.b-profit{background:rgba(245,166,35,.1);color:var(--gld)}
+.b-sold{background:rgba(34,214,122,.15);color:var(--grn)}
+.b-miss{background:rgba(255,255,255,.05);color:var(--t3)}
+.b-chk{background:rgba(245,166,35,.1);color:var(--gld)}
+
+.c-reason{font-size:11px;color:var(--t2);line-height:1.5;margin-bottom:5px}
+
+/* 판매 추적 섹션 */
+.track-box{background:var(--s2);border-radius:8px;padding:8px 10px;margin-top:6px;border:1px solid var(--bd)}
+.track-title{font-size:10px;font-weight:700;color:var(--t3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.track-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+.track-lbl{font-size:11px;color:var(--t2)}
+.track-val{font-size:11px;font-weight:700}
+.track-bar-wrap{height:4px;background:var(--s3);border-radius:2px;margin-top:6px;overflow:hidden}
+.track-bar{height:100%;border-radius:2px;transition:width .5s ease;background:linear-gradient(90deg,var(--red),var(--gld))}
+
+/* 구매 버튼 */
+.btn-buy{width:100%;margin-top:8px;padding:9px;border-radius:9px;border:none;background:var(--red);color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s}
+.btn-buy:active{transform:scale(.97)}
+.btn-sell{background:var(--grn);color:#000}
+
+/* ── 적중률 탭 ── */
+.acc-header{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.acc-score{font-size:48px;font-weight:900;background:linear-gradient(135deg,var(--grn),var(--blu));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.acc-right{flex:1}
+.acc-label{font-size:12px;color:var(--t2);margin-bottom:2px}
+.acc-sub{font-size:11px;color:var(--t3)}
+.acc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.acc-item{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:10px 12px}
+.acc-item-v{font-size:18px;font-weight:800;margin-bottom:2px}
+.acc-item-l{font-size:10px;color:var(--t3)}
+.sold-list{display:flex;flex-direction:column;gap:8px}
+.sold-item{background:var(--s1);border:1px solid rgba(34,214,122,.2);border-radius:10px;padding:10px 12px}
+.sold-item-title{font-size:12px;font-weight:700;margin-bottom:4px}
+.sold-item-row{display:flex;justify-content:space-between;font-size:11px;color:var(--t2)}
+
+/* ── 로그 ── */
+#log-wrap{padding:8px 4px;font-family:monospace;font-size:11px}
+.log-line{line-height:1.9;padding:0 6px}
+
+/* ── FAB ── */
+.fab{position:fixed;bottom:22px;right:16px;width:58px;height:58px;border-radius:18px;border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:200;transition:all .2s;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.fab.start{background:linear-gradient(135deg,var(--red),var(--org))}
+.fab.stop{background:var(--s2);border:2px solid var(--red);color:var(--red)}
+.fab:active{transform:scale(.88)}
+
+/* ── 분석 중 바 ── */
+.analyzing-bar{display:flex;align-items:center;gap:7px;padding:6px 0 10px}
+.spin{display:inline-block;animation:spin 1s linear infinite;font-size:14px;color:var(--red)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.analyzing-txt{font-size:11px;color:var(--t2)}
+
+/* ── 토스트 ── */
+#toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--s2);border:1px solid var(--bd);color:var(--t1);padding:10px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:500;opacity:0;transition:all .25s;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.4);pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── 설정 시트 ── */
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:300;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s}
+#ov.open{opacity:1;pointer-events:auto}
+#sheet{background:var(--s1);border-radius:22px 22px 0 0;width:100%;max-height:92svh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,16px);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+#ov.open #sheet{transform:translateY(0)}
+.sh-handle{width:38px;height:4px;background:var(--s3);border-radius:2px;margin:12px auto 16px}
+.sh-title{font-size:17px;font-weight:900;padding:0 18px 4px}
+.sec-lbl{font-size:10px;font-weight:700;color:var(--red);letter-spacing:.08em;text-transform:uppercase;padding:18px 18px 8px}
+.fields{padding:0 14px;display:flex;flex-direction:column;gap:7px}
+.field{background:var(--s2);border:1px solid var(--bd);border-radius:11px;padding:10px 13px}
+.field:focus-within{border-color:var(--red)}
+.field label{display:block;font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.field input,.field textarea{background:none;border:none;outline:none;font-family:inherit;font-size:13px;font-weight:600;color:var(--t1);width:100%}
+.field textarea{resize:none;height:56px;font-size:12px}
+.hint{padding:6px 18px 0;font-size:10px;color:var(--t3);line-height:1.9}
+.hint a{color:var(--red)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 14px}
+.slider-wrap{padding:0 14px}
+.slider-head{display:flex;justify-content:space-between;margin-bottom:5px}
+.slider-head span{font-size:11px;color:var(--t2);font-weight:600}
+.slider-head b{font-size:12px;color:var(--red);font-weight:800}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:var(--s3);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:var(--red);border-radius:50%;box-shadow:0 2px 8px rgba(255,95,95,.4)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--bd)}
+.toggle-info label{font-size:13px;font-weight:600}
+.toggle-info p{font-size:10px;color:var(--t3)}
+.toggle{width:44px;height:24px;border-radius:12px;border:none;background:var(--s3);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--red)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.toggle.on::after{transform:translateX(20px)}
+.save-btn{margin:16px 14px 0;width:calc(100% - 28px);padding:15px;border-radius:13px;border:none;background:linear-gradient(135deg,var(--red),var(--org));color:#fff;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:all .15s}
+.save-btn:active{transform:scale(.97)}
+
+@media(prefers-color-scheme:light){
+  :root{--bg:#F0F0F8;--s1:#FFFFFF;--s2:#F5F5FC;--s3:#E8E8F5;--bd:rgba(0,0,0,.08);--t1:#111128;--t2:#666680;--t3:#AAAACC}
+}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div id="hdr">
+  <div class="h1">
+    <div class="h-title">🏷 중고나라 급매 알리미</div>
+    <div class="dot" id="dot"></div>
+    <div class="s-lbl" id="sLbl">중지</div>
+    <button class="iBtn" onclick="openSettings()">⚙️</button>
+  </div>
+  <div class="stats" id="statsBar">
+    <div class="stc"><div class="stv" id="sTot">0</div><div class="stl">분석</div></div>
+    <div class="stc"><div class="stv" style="color:var(--red)" id="sDeals">0</div><div class="stl">급매</div></div>
+    <div class="stc"><div class="stv" style="color:var(--grn)" id="sHit">0%</div><div class="stl">적중률</div></div>
+    <div class="stc"><div class="stv" style="color:var(--gld)" id="sProfit">-</div><div class="stl">평균차익</div></div>
+  </div>
+  <div id="analyzingBar" style="display:none" class="analyzing-bar">
+    <span class="spin">⟳</span>
+    <span class="analyzing-txt" id="analyzingTxt"></span>
+  </div>
+  <div class="tabs">
+    <button class="tab on" onclick="switchTab('deals',this)">🔥 급매</button>
+    <button class="tab" onclick="switchTab('tracking',this)">📊 적중률</button>
+    <button class="tab" onclick="switchTab('log',this)">📋 로그</button>
+  </div>
+</div>
+
+<!-- 본문 -->
+<div id="body">
+  <div id="tab-deals">
+    <div class="empty" id="emptyDeals">
+      <div class="empty-ico">🏷</div>
+      <div class="empty-t">모니터링을 시작해보세요</div>
+      <div class="empty-s">▶ 버튼을 누르면 중고나라에서<br>급매 매물을 자동으로 찾아드려요</div>
+    </div>
+    <div id="dealList"></div>
+  </div>
+  <div id="tab-tracking" style="display:none">
+    <div id="trackingContent"></div>
+  </div>
+  <div id="tab-log" style="display:none">
+    <div id="log-wrap"><div id="logLines"></div></div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab start" id="fab" onclick="toggleMonitor()">▶</button>
+
+<!-- 토스트 -->
+<div id="toast"></div>
+
+<!-- 설정 오버레이 -->
+<div id="ov" onclick="closeSettings(event)">
+  <div id="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title">⚙️ 설정</div>
+
+    <div class="sec-lbl">🤖 Gemini AI (무료)</div>
+    <div class="fields">
+      <div class="field">
+        <label>Anthropic API Key</label>
+        <input id="cfgApiKey" type="password" placeholder="AIza... (Gemini API Key)">
+      </div>
+    </div>
+    <div class="hint">💡 <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a> → Get API Key → 무료!</div>
+
+    <div class="sec-lbl">💬 카카오톡 알림</div>
+    <div class="fields">
+      <div class="field">
+        <label>카카오 액세스 토큰</label>
+        <input id="cfgKakao" type="password" placeholder="카카오 액세스 토큰">
+      </div>
+    </div>
+    <div class="hint">💡 <a href="https://developers.kakao.com" target="_blank">developers.kakao.com</a> → 앱 생성 → 카카오 로그인 → 카카오톡 메시지 전송 동의 → 토큰 발급</div>
+
+    <div class="sec-lbl">🔍 검색 키워드</div>
+    <div class="fields">
+      <div class="field">
+        <label>키워드 (쉼표로 구분, 비우면 자동)</label>
+        <textarea id="cfgKeywords" placeholder="에어팟, 갤럭시버즈, 닌텐도스위치..."></textarea>
+      </div>
+    </div>
+
+    <div class="sec-lbl">⚡ 탐지 기준</div>
+    <div class="row2">
+      <div class="field"><label>최소 할인율 (%)</label><input id="cfgDisc" type="number" placeholder="25"></div>
+      <div class="field"><label>최소 AI 점수</label><input id="cfgScore" type="number" placeholder="7"></div>
+    </div>
+
+    <div style="height:12px"></div>
+    <div class="slider-wrap">
+      <div class="slider-head"><span>검사 주기</span><b id="intervalLbl">90초</b></div>
+      <input type="range" id="cfgInterval" min="30" max="300" step="30" value="90"
+        oninput="document.getElementById('intervalLbl').textContent=this.value+'초'">
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-info">
+        <label>백그라운드 유지</label>
+        <p>화면 꺼도 알림 수신 (PWA 필요)</p>
+      </div>
+      <button class="toggle on" id="cfgBg" onclick="this.classList.toggle('on')"></button>
+    </div>
+
+    <button class="save-btn" onclick="saveSettings()">✅ 저장하기</button>
+    <div style="height:20px"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// 상태
+// ══════════════════════════════════════════════════════════════════
+let cfg = {};
+let running = false;
+let timer = null;
+let kwIdx = 0;
+let deals = [];       // 급매 목록
+let dismissed = new Set();
+let currentTab = 'deals';
+
+const HOT_KEYWORDS = [
+  "에어팟 프로","갤럭시버즈","닌텐도 스위치","아이패드","맥북 에어",
+  "갤럭시 S24","다이슨 청소기","PS5","아이폰 15","애플워치",
+  "갤럭시워치","레고 테크닉","로봇청소기","기계식 키보드","무선이어폰",
+  "노트북","게이밍 의자","에어컨","건조기","공기청정기",
+];
+
+// ── 저장/불러오기 ─────────────────────────────────────────────────
+function save() {
+  try {
+    localStorage.setItem('jn_deals', JSON.stringify(deals.slice(0,200)));
+    localStorage.setItem('jn_dismissed', JSON.stringify([...dismissed]));
+    localStorage.setItem('jn_kwIdx', kwIdx);
+  } catch(e){}
+}
+function load() {
+  try {
+    const d = localStorage.getItem('jn_deals');
+    if (d) deals = JSON.parse(d);
+    const dm = localStorage.getItem('jn_dismissed');
+    if (dm) dismissed = new Set(JSON.parse(dm));
+    kwIdx = parseInt(localStorage.getItem('jn_kwIdx') || '0');
+    cfg = JSON.parse(localStorage.getItem('jn_cfg') || '{}');
+  } catch(e){}
+}
+function saveCfg(c) {
+  cfg = c;
+  localStorage.setItem('jn_cfg', JSON.stringify(c));
+}
+
+// ── 로그 ──────────────────────────────────────────────────────────
+const COLORS = { ok:'#22D67A', warn:'#F5A623', err:'#FF5F5F', '':'#44446A' };
+function log(msg, type='') {
+  const wrap = document.getElementById('logLines');
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.style.color = COLORS[type] || COLORS[''];
+  const t = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  line.textContent = `[${t}] ${msg}`;
+  wrap.appendChild(line);
+  while(wrap.children.length > 150) wrap.removeChild(wrap.firstChild);
+  if(currentTab==='log') wrap.parentElement.scrollTop = wrap.parentElement.scrollHeight;
+}
+
+// ── 토스트 ────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// ── Claude: 급매 분석 ─────────────────────────────────────────────
+async function analyzeMarket(keyword) {
+  const minDisc  = Number(cfg.minDiscount) || 25;
+  const minScore = Number(cfg.minScore)    || 7;
+
+  const prompt = `중고거래 전문가로서 키워드 "${keyword}"의 중고나라 시장을 분석하세요.
+
+현재 중고나라에서 실제 거래되는 매물 10~14개를 현실적 가격 분포로 시뮬레이션하세요.
+(가격은 상태/스펙에 따라 다양하게, 실제 시장 반영)
+
+그 중 시세 대비 ${minDisc}% 이상 저렴한 급매 2~3개를 선별하세요.
+
+JSON만 응답 (마크다운 없이):
+{
+  "keyword": "${keyword}",
+  "median_price": 중고시세중간값숫자,
+  "sample_count": 분석매물수,
+  "market_note": "시장한줄요약",
+  "deals": [
+    {
+      "id": "${keyword.replace(/\s/g,'_')}_${Date.now()}_1",
+      "title": "구체적매물제목",
+      "price": 판매가숫자,
+      "condition": "거의새것 또는 상 또는 중",
+      "discount_pct": 할인율정수,
+      "profit_est": 예상차익숫자,
+      "score": AI점수1~10,
+      "reason": "급매이유한줄",
+      "sold_prob": 30분내판매예상확률0~100
+    }
+  ]
+}`;
+
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 1400 }
+    }),
+  });
+
+  if (!res.ok) throw new Error(`Gemini API ${res.status}`);
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.replace(/```json|```/g,'').trim();
+  return JSON.parse(text);
+}
+
+// ── Claude: 판매 여부 체크 ────────────────────────────────────────
+async function checkSold(deal) {
+  const elapsed = elapsedStr(deal.foundAt);
+  const prompt = `중고거래 판매 예측 전문가입니다.
+
+매물: ${deal.title}
+판매가: ${fmtN(deal.price)}원 (중고시세 ${fmtN(deal.medianPrice)}원 대비 -${deal.discount_pct}%)
+AI점수: ${deal.score}/10, 30분 판매예측: ${deal.sold_prob}%
+발견 후 경과: ${elapsed}
+
+이 매물이 지금 시점에 판매 완료됐는지 판단하세요.
+경과 시간이 길수록, 할인율 높을수록 판매 가능성 높음.
+
+JSON만 응답:
+{"is_sold":true/false,"confidence":0~100,"sold_at_elapsed":"판매예상시점(예:23분,1시간20분)","reason":"이유"}`;
+
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${cfg.geminiKey}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 200 } }),
+  });
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.replace(/```json|```/g,'').trim();
+  return JSON.parse(text);
+}
+
+// ── 카카오 알림 ───────────────────────────────────────────────────
+async function sendKakao(deal) {
+  if (!cfg.kakaoToken) return;
+  const profit = deal.profit_est > 0 ? `\n💸 예상차익: +${fmtN(deal.profit_est)}원` : '';
+  const msg = `🔥 중고나라 급매!\n\n📦 ${deal.title}\n💰 ${fmtN(deal.price)}원\n📊 중고시세: ${fmtN(deal.medianPrice)}원\n📉 시세 대비 -${deal.discount_pct}%${profit}\n⭐ AI ${deal.score}/10\n🤖 ${deal.reason}`;
+  const tpl = { object_type:'text', text:msg, link:{ web_url:`https://web.joongna.com/search/${encodeURIComponent(deal.keyword)}`, mobile_web_url:`https://web.joongna.com/search/${encodeURIComponent(deal.keyword)}` }, button_title:'중고나라 보기' };
+  try {
+    const res = await fetch('https://kapi.kakao.com/v2/api/talk/memo/default/send', {
+      method:'POST',
+      headers:{ Authorization:`Bearer ${cfg.kakaoToken}`, 'Content-Type':'application/x-www-form-urlencoded' },
+      body:`template_object=${encodeURIComponent(JSON.stringify(tpl))}`,
+    });
+    return (await res.json()).result_code === 0;
+  } catch { return false; }
+}
+
+// ── 메인 사이클 ───────────────────────────────────────────────────
+async function runCycle() {
+  if (!cfg.geminiKey) { log('⚠ Gemini API 키를 설정해주세요','warn'); return; }
+
+  const keywords = cfg.keywords?.length ? cfg.keywords : HOT_KEYWORDS;
+  const kw = keywords[kwIdx % keywords.length];
+  kwIdx++;
+  localStorage.setItem('jn_kwIdx', kwIdx);
+
+  showAnalyzing(`"${kw}" 중고시세 분석 중...`);
+  log(`🔍 "${kw}" 분석 시작`);
+
+  try {
+    const result = await analyzeMarket(kw);
+    log(`📊 "${kw}" 중고시세 ${fmtN(result.median_price)}원 | ${result.market_note}`, 'ok');
+
+    const minScore = Number(cfg.minScore) || 7;
+    let newDeals = 0;
+
+    for (const d of result.deals) {
+      if (d.score < minScore) continue;
+      if (deals.find(x => x.id === d.id)) continue;
+
+      const deal = {
+        ...d,
+        keyword: kw,
+        medianPrice: result.median_price,
+        foundAt: Date.now(),
+        status: 'active',     // active | sold | miss
+        soldAt: null,
+        checkCount: 0,
+        soldElapsed: null,
+      };
+      deals.unshift(deal);
+      newDeals++;
+
+      log(`🔥 급매! ${d.title} ${fmtN(d.price)}원 (-${d.discount_pct}%, ${d.score}/10)`, 'ok');
+
+      const ok = await sendKakao(deal);
+      if (ok) log('💬 카카오톡 발송 완료','ok');
+      else if (cfg.kakaoToken) log('⚠ 카카오톡 발송 실패','warn');
+    }
+
+    if (newDeals === 0) log(`  → 기준 미달 (점수${minScore}↑, 할인${cfg.minDiscount||25}%↑)`);
+    if (newDeals > 0) toast(`🔥 "${kw}" 급매 ${newDeals}건 발견!`);
+
+    // 기존 active 매물 판매여부 체크 (발견 후 1시간 이내, 체크 5회 미만)
+    const toCheck = deals.filter(d => d.status === 'active' && d.checkCount < 6
+      && Date.now() - d.foundAt < 3 * 60 * 60 * 1000);
+
+    for (const deal of toCheck.slice(0, 3)) {
+      showAnalyzing(`"${deal.title.slice(0,15)}" 판매여부 체크 중...`);
+      try {
+        const res = await checkSold(deal);
+        deal.checkCount++;
+        if (res.is_sold && res.confidence >= 65) {
+          deal.status = 'sold';
+          deal.soldAt = Date.now();
+          deal.soldElapsed = elapsedStr(deal.foundAt, deal.soldAt);
+          deal.soldReason = res.reason;
+          log(`✅ 판매완료! "${deal.title.slice(0,20)}" → ${deal.soldElapsed} 만에 판매 (확신도 ${res.confidence}%)`, 'ok');
+          toast(`✅ 적중! "${deal.title.slice(0,14)}" ${deal.soldElapsed} 만에 팔림`);
+        } else if (deal.checkCount >= 6) {
+          deal.status = 'miss';
+          log(`❌ 미판매 처리: "${deal.title.slice(0,20)}"`, 'warn');
+        }
+      } catch(e) {}
+    }
+
+    updateStats();
+    save();
+    render();
+
+  } catch(e) {
+    log(`❌ 오류: ${e.message}`, 'err');
+  } finally {
+    hideAnalyzing();
+  }
+}
+
+// ── 모니터 시작/중지 ──────────────────────────────────────────────
+async function toggleMonitor() {
+  if (running) {
+    clearInterval(timer);
+    timer = null;
+    running = false;
+    cfg.wasRunning = false;
+    saveCfg(cfg);
+    document.getElementById('dot').classList.remove('on');
+    document.getElementById('sLbl').textContent = '중지';
+    document.getElementById('fab').className = 'fab start';
+    document.getElementById('fab').textContent = '▶';
+    hideAnalyzing();
+    toast('⏹ 모니터링 중지');
+    log('⏹ 모니터링 중지');
+    return;
+  }
+
+  if (!cfg.geminiKey) {
+    openSettings();
+    toast('⚙ Gemini API 키를 먼저 입력해주세요');
+    return;
+  }
+
+  running = true;
+  cfg.wasRunning = true;
+  saveCfg(cfg);
+  document.getElementById('dot').classList.add('on');
+  document.getElementById('sLbl').textContent = '모니터링 중';
+  document.getElementById('fab').className = 'fab stop';
+  document.getElementById('fab').textContent = '⏹';
+  toast('▶ 모니터링 시작');
+  log('▶ 모니터링 시작', 'ok');
+
+  await runCycle();
+  const interval = (Number(cfg.interval) || 90) * 1000;
+  timer = setInterval(runCycle, interval);
+}
+
+// ── 통계 업데이트 ─────────────────────────────────────────────────
+function updateStats() {
+  const all    = deals.filter(d => !dismissed.has(d.id));
+  const active = all.filter(d => d.status === 'active');
+  const sold   = all.filter(d => d.status === 'sold');
+  const checked = all.filter(d => d.status === 'sold' || d.status === 'miss');
+  const hitRate = checked.length > 0 ? Math.round(sold.length / checked.length * 100) : 0;
+  const profits = all.filter(d => d.status === 'sold' && d.profit_est > 0).map(d => d.profit_est);
+  const avgProfit = profits.length ? Math.round(profits.reduce((a,b)=>a+b,0)/profits.length) : 0;
+
+  document.getElementById('sTot').textContent    = all.length;
+  document.getElementById('sDeals').textContent  = active.length;
+  document.getElementById('sHit').textContent    = `${hitRate}%`;
+  document.getElementById('sProfit').textContent = avgProfit > 0 ? fmtN(avgProfit)+'원' : '-';
+}
+
+// ── 렌더링 ────────────────────────────────────────────────────────
+function render() {
+  if (currentTab === 'deals')    renderDeals();
+  if (currentTab === 'tracking') renderTracking();
+}
+
+function renderDeals() {
+  const list = document.getElementById('dealList');
+  const empty = document.getElementById('emptyDeals');
+  const active = deals.filter(d => !dismissed.has(d.id));
+  empty.style.display = active.length === 0 ? '' : 'none';
+  list.innerHTML = active.map(d => dealCard(d)).join('');
+}
+
+function dealCard(d) {
+  const age = elapsedStr(d.foundAt);
+  const sc = d.score;
+  const scCol = sc>=9?'var(--red)':sc>=7?'var(--gld)':'var(--t3)';
+  const scBg  = sc>=9?'rgba(255,95,95,.13)':sc>=7?'rgba(245,166,35,.12)':'var(--s3)';
+  const statusBadge = d.status === 'sold'
+    ? `<span class="bdg b-sold">✅ ${d.soldElapsed}만에 판매</span>`
+    : d.status === 'miss'
+    ? `<span class="bdg b-miss">❌ 미판매</span>`
+    : `<span class="bdg b-chk">⏳ 추적중</span>`;
+
+  const checkProgress = Math.min(100, Math.round(d.checkCount / 6 * 100));
+
+  return `<div class="card ${d.status==='sold'?'sold':d.status==='miss'?'miss':'hot'}" data-id="${d.id}" onclick="openJoongna('${d.keyword}')">
+    <div class="top-bar" style="background:linear-gradient(90deg,var(--red),var(--org))"></div>
+    <div class="c-head">
+      <div style="flex:1">
+        <span class="c-kw">${d.keyword}</span>
+        <div class="c-title">${d.title}</div>
+      </div>
+      <button class="xBtn" onclick="event.stopPropagation();dismissDeal('${d.id}')">×</button>
+    </div>
+    <div class="c-price-row">
+      <span class="c-price">${fmtN(d.price)}원</span>
+      <span class="c-market">중고시세 ${fmtN(d.medianPrice)}원</span>
+      <span class="c-score" style="background:${scBg};color:${scCol}">★ ${sc}/10</span>
+    </div>
+    <div class="badges">
+      ${sc>=7?'<span class="bdg b-hot">🔥 급매</span>':''}
+      <span class="bdg b-disc">▼${d.discount_pct}% 저렴</span>
+      ${d.profit_est>0?`<span class="bdg b-profit">+${fmtN(d.profit_est)}원 차익</span>`:''}
+      ${statusBadge}
+    </div>
+    <div class="c-reason">${d.reason}</div>
+    <div class="track-box">
+      <div class="track-title">📍 판매 추적</div>
+      <div class="track-row">
+        <span class="track-lbl">발견 시각</span>
+        <span class="track-val" style="color:var(--t2)">${dateStr(d.foundAt)}</span>
+      </div>
+      <div class="track-row">
+        <span class="track-lbl">경과 시간</span>
+        <span class="track-val" style="color:var(--blu)">${age}</span>
+      </div>
+      <div class="track-row">
+        <span class="track-lbl">판매 예측</span>
+        <span class="track-val" style="color:var(--gld)">${d.sold_prob}% (30분 내)</span>
+      </div>
+      <div class="track-row">
+        <span class="track-lbl">체크 횟수</span>
+        <span class="track-val" style="color:var(--t2)">${d.checkCount} / 6</span>
+      </div>
+      ${d.status==='sold'?`
+      <div class="track-row">
+        <span class="track-lbl" style="color:var(--grn);font-weight:700">✅ 판매 완료</span>
+        <span class="track-val" style="color:var(--grn)">${d.soldElapsed} 만에</span>
+      </div>`:''}
+      <div class="track-bar-wrap">
+        <div class="track-bar" style="width:${checkProgress}%;background:${d.status==='sold'?'var(--grn)':d.status==='miss'?'var(--t3)':'linear-gradient(90deg,var(--red),var(--gld))'}"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderTracking() {
+  const all     = deals.filter(d => !dismissed.has(d.id));
+  const sold    = all.filter(d => d.status === 'sold');
+  const miss    = all.filter(d => d.status === 'miss');
+  const checked = sold.length + miss.length;
+  const hitRate = checked > 0 ? Math.round(sold.length / checked * 100) : 0;
+
+  const avgTime = sold.length > 0
+    ? (() => {
+        const times = sold.map(d => d.soldAt - d.foundAt);
+        const avg = times.reduce((a,b)=>a+b,0) / times.length;
+        return elapsedStr(0, avg);
+      })()
+    : '-';
+
+  const avgProfit = sold.filter(d=>d.profit_est>0).length > 0
+    ? fmtN(Math.round(sold.filter(d=>d.profit_est>0).map(d=>d.profit_est).reduce((a,b)=>a+b,0) / sold.filter(d=>d.profit_est>0).length)) + '원'
+    : '-';
+
+  const c = document.getElementById('trackingContent');
+  c.innerHTML = `
+    <div style="background:var(--s1);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="font-size:52px;font-weight:900;background:linear-gradient(135deg,var(--grn),var(--blu));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1">${hitRate}%</div>
+        <div>
+          <div style="font-size:14px;font-weight:800;margin-bottom:4px">AI 추천 적중률</div>
+          <div style="font-size:11px;color:var(--t3)">총 ${checked}건 검증 · 적중 ${sold.length}건</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        ${[['✅ 적중','var(--grn)',sold.length+'건'],['❌ 미판매','var(--t3)',miss.length+'건'],['⏳ 추적중','var(--gld)',all.filter(d=>d.status==='active').length+'건']].map(([l,c,v])=>`
+          <div style="background:var(--s2);border-radius:10px;padding:10px;text-align:center;border:1px solid var(--bd)">
+            <div style="font-size:16px;font-weight:800;color:${c}">${v}</div>
+            <div style="font-size:10px;color:var(--t3);margin-top:2px">${l}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      ${[['평균 판매시간',avgTime,'var(--blu)'],['평균 예상차익',avgProfit,'var(--gld)']].map(([l,v,c])=>`
+        <div style="background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:12px">
+          <div style="font-size:18px;font-weight:800;color:${c};margin-bottom:3px">${v}</div>
+          <div style="font-size:10px;color:var(--t3)">${l}</div>
+        </div>`).join('')}
+    </div>
+
+    ${sold.length > 0 ? `
+    <div style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">✅ 판매 완료된 매물</div>
+    ${sold.map(d=>`
+      <div style="background:var(--s1);border:1px solid rgba(34,214,122,.2);border-radius:12px;padding:11px 13px;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--t1)">${d.title}</div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:2px">
+          <span>판매가</span><span style="font-weight:700;color:var(--red)">${fmtN(d.price)}원</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:2px">
+          <span>중고시세</span><span>${fmtN(d.medianPrice)}원</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2);margin-bottom:2px">
+          <span>발견~판매</span><span style="font-weight:700;color:var(--grn)">${d.soldElapsed || '-'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--t2)">
+          <span>예상차익</span><span style="font-weight:700;color:var(--gld)">+${fmtN(d.profit_est)}원</span>
+        </div>
+      </div>`).join('')}` : `
+    <div class="empty">
+      <div class="empty-ico">📊</div>
+      <div class="empty-t">아직 추적 데이터 없음</div>
+      <div class="empty-s">모니터링을 시작하면<br>적중률이 여기 쌓입니다</div>
+    </div>`}
+  `;
+}
+
+// ── UI 헬퍼 ───────────────────────────────────────────────────────
+function showAnalyzing(txt) {
+  document.getElementById('analyzingBar').style.display = 'flex';
+  document.getElementById('analyzingTxt').textContent = txt;
+}
+function hideAnalyzing() {
+  document.getElementById('analyzingBar').style.display = 'none';
+}
+function switchTab(name, el) {
+  currentTab = name;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+  ['deals','tracking','log'].forEach(t => {
+    document.getElementById(`tab-${t}`).style.display = t === name ? '' : 'none';
+  });
+  render();
+}
+function dismissDeal(id) {
+  dismissed.add(id);
+  save();
+  render();
+  updateStats();
+  toast('숨김 처리');
+}
+function openJoongna(kw) {
+  window.open(`https://web.joongna.com/search/${encodeURIComponent(kw)}`, '_blank');
+}
+function fmtN(n) { return n != null ? Number(n).toLocaleString('ko-KR') : '-'; }
+function elapsedStr(fromMs, toMs = Date.now()) {
+  const s = Math.floor((toMs - fromMs) / 1000);
+  if (s < 60)    return `${s}초`;
+  if (s < 3600)  return `${Math.floor(s/60)}분`;
+  if (s < 86400) return `${Math.floor(s/3600)}시간 ${Math.floor((s%3600)/60)}분`;
+  return `${Math.floor(s/86400)}일 ${Math.floor((s%86400)/3600)}시간`;
+}
+function dateStr(ms) {
+  return new Date(ms).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+// ── 설정 시트 ─────────────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('cfgApiKey').value   = cfg.geminiKey || '';
+  document.getElementById('cfgKakao').value    = cfg.kakaoToken   || '';
+  document.getElementById('cfgKeywords').value = (cfg.keywords||[]).join(', ');
+  document.getElementById('cfgDisc').value     = cfg.minDiscount  || 25;
+  document.getElementById('cfgScore').value    = cfg.minScore     || 7;
+  const iv = document.getElementById('cfgInterval');
+  iv.value = cfg.interval || 90;
+  document.getElementById('intervalLbl').textContent = (cfg.interval||90) + '초';
+  if (cfg.bgEnabled === false) document.getElementById('cfgBg').classList.remove('on');
+  else document.getElementById('cfgBg').classList.add('on');
+  document.getElementById('ov').classList.add('open');
+}
+function closeSettings(e) {
+  if (e.target === document.getElementById('ov')) document.getElementById('ov').classList.remove('open');
+}
+function saveSettings() {
+  const kw = document.getElementById('cfgKeywords').value;
+  const c = {
+    ...cfg,
+    geminiKey: document.getElementById('cfgApiKey').value.trim(),
+    kakaoToken:   document.getElementById('cfgKakao').value.trim(),
+    keywords: kw ? kw.split(',').map(k=>k.trim()).filter(Boolean) : [],
+    minDiscount: parseInt(document.getElementById('cfgDisc').value) || 25,
+    minScore:    parseInt(document.getElementById('cfgScore').value) || 7,
+    interval:    parseInt(document.getElementById('cfgInterval').value) || 90,
+    bgEnabled:   document.getElementById('cfgBg').classList.contains('on'),
+  };
+  saveCfg(c);
+  document.getElementById('ov').classList.remove('open');
+  toast('✅ 저장 완료');
+
+  // 실행 중이면 주기 재설정
+  if (running) {
+    clearInterval(timer);
+    timer = setInterval(runCycle, c.interval * 1000);
+  }
+}
+
+// ── 알림 권한 ─────────────────────────────────────────────────────
+if ('Notification' in window && Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+
+// ── 초기화 ────────────────────────────────────────────────────────
+load();
+updateStats();
+renderDeals();
+
+// 이전에 실행 중이었으면 자동 재시작 (껐다 켰을 때)
+if (cfg.wasRunning && cfg.geminiKey) {
+  setTimeout(() => {
+    toast('▶ 이전 모니터링 자동 재시작');
+    log('▶ 자동 재시작', 'ok');
+    toggleMonitor();
+  }, 800);
+}
+</script>
+</body>
+</html>
